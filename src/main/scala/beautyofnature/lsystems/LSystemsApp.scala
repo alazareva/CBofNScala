@@ -33,15 +33,13 @@ class Turtle(val turtleInfo: TurtleInfo, var lSystem: LSystem) {
     lSystem.sentence.foreach({
       case '[' => applet.pushMatrix()
       case ']' => applet.popMatrix()
-      case 'F' => {
+      case 'F' =>
         val currentLen = turtleInfo.len * Math.pow(turtleInfo.scalingFactor, lSystem.generation).toFloat
         applet.line(0f, 0f, currentLen, 0f)
         applet.translate(currentLen, 0)
-      }
-      case 'G' => {
+      case 'G' =>
         val currentLen = turtleInfo.len * Math.pow(turtleInfo.scalingFactor, lSystem.generation).toFloat
         applet.translate(currentLen, 0)
-      }
       case '+' => applet.rotate(turtleInfo.theta)
       case '-' => applet.rotate(-turtleInfo.theta)
     }
@@ -55,15 +53,6 @@ object LSystemCollection {
 
   val tree = new Turtle(
     TurtleInfo(200, PApplet.radians(25), 300, 600, -PConstants.PI / 2),
-    LSystem(
-      "F",
-      Map(
-        'F' -> "FF+[+F-F-F]-[-F+F+F]"
-      )
-    ))
-
-  val leaf = new Turtle(
-    TurtleInfo(200, PApplet.radians(20), 300, 600, -PConstants.PI / 2),
     LSystem(
       "F",
       Map(
