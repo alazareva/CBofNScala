@@ -2,22 +2,14 @@ package beautyofnature.affineTransformations
 
 import processing.core.{PApplet, PConstants}
 
-case class TransformationRule(a: Float, b: Float, c: Float, d: Float, e: Float, f: Float)
-
-case class Point(x: Float, y: Float) {
-  def transform(rule: TransformationRule): Point = Point(
-    rule.a * x + rule.b * y + rule.e,
-    rule.c * x + rule.d * y + rule.f
-  )
-}
 case class Rectangle(p1: Point, p2: Point, p3: Point, p4: Point) {
   def transform(rule: TransformationRule): Rectangle = {
-   Rectangle(
-     p1.transform(rule),
-     p2.transform(rule),
-     p3.transform(rule),
-     p4.transform(rule)
-   )
+    Rectangle(
+      p1.transform(rule),
+      p2.transform(rule),
+      p3.transform(rule),
+      p4.transform(rule)
+    )
   }
 }
 
