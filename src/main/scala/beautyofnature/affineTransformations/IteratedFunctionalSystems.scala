@@ -6,15 +6,16 @@ import scala.util.Random
 
 
 
-case class IFSTransformation(rules: List[TransformationRule], iterations: Int = 100) {
-  val determinants = rules.map(r => Math.max(Math.abs(r.a * r.d - r.b * r.c), 0.01))
-  val probas = determinants.map(_ / determinants.sum)
+case class IFSTransformation(rules: List[TransformationRule], minX: Float, maxX: Float,
+                             minY: Float, maxY: Float, iterations: Int = 100) {
+  val determinants: List[Float] = rules.map(r => Math.max(Math.abs(r.a * r.d - r.b * r.c), 0.01f))
+  val probas: List[Float] = determinants.map(_ / determinants.sum)
 
 
   def randomRule: TransformationRule  = {
     val r = Random.nextFloat
     def rec(curS: Float, curJ: Int): Int = {
-      val nextS = curS + probas(curJ).toFloat
+      val nextS = curS + probas(curJ)
       if (nextS >= r) curJ
       else rec(nextS, curJ + 1)
     }
@@ -25,20 +26,26 @@ case class IFSTransformation(rules: List[TransformationRule], iterations: Int = 
 }
 
 object IFSTransformations {
-  val barnsleyFerm = IFSTransformation(List(
+
+  val barnsleyFerm: IFSTransformation = IFSTransformation(List(
     TransformationRule( 0f,     0f,     0f,    0.16f, 0f, 0f),
     TransformationRule( 0.85f,  0.04f, -0.04f, 0.85f, 0f, 1.60f),
     TransformationRule( 0.20f, -0.26f,  0.23f, 0.22f, 0f, 1.60f),
     TransformationRule(-0.15f,  0.28f,  0.26f, 0.24f, 0f, 0.44f),
-  ),
-    1000
-  )
+  ), -2.1820f, 2.6558f, 0f, 9.9983f, 1000)
+
+  val mapleLeaf: IFSTransformation = IFSTransformation(List(
+    TransformationRule( 0.1400f,  0.0100f,  0.0000f,  0.5100f, -0.0800f, -1.3100f),
+    TransformationRule( 0.4300f,  0.5200f, -0.4500f,  0.5000f,  1.4900f, -0.7500f),
+    TransformationRule( 0.4500f, -0.4900f,  0.4700f,  0.4700f, -1.6200f, -0.7400f),
+    TransformationRule( 0.4900f,  0.0000f,  0.0000f,  0.5100f,  0.0200f,  1.6200f),
+  ), -4f, 4f, -4f, 4f, 10000)
 }
 
 
 class IteratedFunctionalSystems extends PApplet {
 
-  val transformation: IFSTransformation = IFSTransformations.barnsleyFerm
+  val transformation: IFSTransformation = IFSTransformations.mapleLeaf
 
   var point = Point(Random.nextFloat, Random.nextFloat)
 
@@ -47,15 +54,15 @@ class IteratedFunctionalSystems extends PApplet {
     size(600, 600, PConstants.P2D)
   }
 
-  def drawPoint(p: Point) = {
+  def drawPoint(p: Point): Unit = {
     val pt = mapPoint(p)
     point(pt.x, pt.y)
   }
 
   def mapPoint(p: Point): Point = {
     Point(
-      PApplet.map(p.x, -2.1820f, 2.6558f, 0,  width),
-      PApplet.map(p.y, 0f, 9.9983f, height, 0),
+      PApplet.map(p.x, transformation.minX, transformation.maxX, 0,  width),
+      PApplet.map(p.y, transformation.minY, transformation.maxY, height, 0),
     )
   }
 
@@ -64,7 +71,7 @@ class IteratedFunctionalSystems extends PApplet {
     background(255)
     noFill()
     smooth()
-    stroke(0, 100, 0, 20)
+    stroke(0, 100, 0, 40)
     strokeWeight(1)
   }
 
