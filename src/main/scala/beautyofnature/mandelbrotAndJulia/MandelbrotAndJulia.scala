@@ -41,8 +41,8 @@ object Functions {
 
 class MandelbrotAndJulia extends PApplet {
 
-  val juliaExtent = Extent(-2f, 2f, -2f, 2f)
-  var extent = juliaExtent
+  val juliaExtent:Extent = Extent(-2f, 2f, -2f, 2f)
+  var extent: Extent = juliaExtent
   val maxIterations = 100
   var juliaCoordinate: Option[ComplexNumber] = None
   var boxStart: Option[ComplexNumber] = None
@@ -65,20 +65,13 @@ class MandelbrotAndJulia extends PApplet {
   }
 
   def drawMandelbrot(): Unit = {
-    //fill(255)
-    //rect(0, 0, width/2, height)
-    println("Drawing mandelbrot")
+    println("Drawing Mandelbrot")
     for (x <- 0 until width / 2; y <- 0 until height) {
       val z = getCoordinate(x, y, extent)
       val iterations = Functions.mandelbrot(maxIterations)(z)
       val a = PApplet.map(iterations, 0, maxIterations, 255, 0)
       val col = color(a)
       set(x, y, col)
-      /*
-      if (iterations >= maxIterations) {
-        val c = color(0)
-        set(x, y, c)
-      } */
     }
     juliaCoordinate match {
       case Some(c) => {
@@ -93,22 +86,16 @@ class MandelbrotAndJulia extends PApplet {
     }
 
   def drawJulia(): Unit = {
-   // fill(255)
-    //rect(width/2, 0, width, height)
     juliaCoordinate match {
       case None => ()
       case Some(c) =>
-        println("Drawing julia")
+        println("Drawing Julia")
         for (x <- width / 2 until width; y <- 0 until height) {
           val z = getCoordinate(x - width / 2, y, juliaExtent)
           val iterations = Functions.julia(maxIterations)(z, c)
           val a = PApplet.map(iterations, 0, maxIterations, 255, 0)
           val col = color(a)
           set(x, y, col)
-          if (iterations >= maxIterations) {
-            val c = color(0)
-            //set(x, y, c)
-          }
         }
     }
   }
@@ -142,21 +129,23 @@ class MandelbrotAndJulia extends PApplet {
     }}
 
   override def keyPressed(): Unit = {
-    if (key == 'r') {
+    if (key == 'r' || key == 'R') {
       extent = juliaExtent
+      juliaCoordinate = None
       redraw()
     }
   }
 
   override def mouseReleased(): Unit = {
     if (mouseX < width / 2 ) (boxStart, boxEnd) match {
-      case (Some(ComplexNumber(startx, starty)), Some(ComplexNumber(endx, endy))) =>
+      case (Some(ComplexNumber(startX, startY)), Some(ComplexNumber(endX, endY))) =>
       // TODO handle dragging in other directions
         println("Setting extent")
-        val startxf = startx.toFloat
-        val startyf = starty.toFloat
-        val maxSize = Math.max(endx - startxf, endy - startyf).toFloat
-        extent = Extent(startxf, startxf + maxSize, startyf, startyf + maxSize)
+        val List(sX, eX) = List(startX.toFloat, endX.toFloat).sorted
+        val List(sY, eY) = List(startY.toFloat, endY.toFloat).sorted
+
+        val maxSize = Math.max(eX - sX, eY - sY)
+        extent = Extent(sX, sX + maxSize, sY, sY + maxSize)
         juliaCoordinate = None
         println(extent)
         redraw()
