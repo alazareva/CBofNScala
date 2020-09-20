@@ -47,7 +47,8 @@ class Bifurcation extends PApplet {
           rec(j + 1, config.f(x, r), x :: prevX.dropRight(1))
         }
       }
-      rec(0, xInitial, List(2.0f, 3.0f, 4.0f, 5,0f))
+
+      rec(0, xInitial, List(2.0f, 3.0f, 4.0f, 5, 0f))
     }
     if (config.rMin + (frameCount + 1) * rStep >= config.rMax) noLoop()
   }
