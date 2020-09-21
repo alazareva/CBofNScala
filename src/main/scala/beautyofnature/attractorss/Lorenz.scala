@@ -1,6 +1,5 @@
 package beautyofnature.attractorss
 
-import beautyofnature.attractorss.Lorenz.{background, colorMode, size}
 import processing.core.{PApplet, PConstants}
 
 
