@@ -10,32 +10,43 @@ trait Species {
 }
 
 case class Grass(energy: Float) extends Species
+
 case class Sheep(energy: Float) extends Species
+
 case class Wolf(energy: Float) extends Species
 
 trait GridCell {
   def isGrass: Boolean
+
   def isSheep: Boolean
+
   def isWolf: Boolean
+
   def isEmpty: Boolean
+
   def visited: Boolean
 }
-case class FullGridCell(species: Species, visited: Boolean) extends GridCell{
+
+case class FullGridCell(species: Species, visited: Boolean) extends GridCell {
   def isGrass: Boolean = species match {
     case _: Grass => true
     case _ => false
   }
+
   def isSheep: Boolean = species match {
     case _: Sheep => true
     case _ => false
   }
+
   def isWolf: Boolean = species match {
     case _: Wolf => true
     case _ => false
   }
+
   def isEmpty: Boolean = false
 }
-case class EmptyGridCell(energy: Float) extends GridCell{
+
+case class EmptyGridCell(energy: Float) extends GridCell {
 
   override def isEmpty: Boolean = true
 
@@ -100,11 +111,11 @@ class Game(val board: Array[Array[GridCell]], val parameters: GameParameters) {
   }
 
   def moveToRandomEmptyCell(i: Int, j: Int, animal: Species): Unit = randomNeighborIndex(i, j)(_.isEmpty) match {
-      case Some((ei, ej)) =>
-        board(ei)(ej) = FullGridCell(animal, visited = true)
-        board(i)(j) = EmptyGridCell(0)
-      case None => ()
-    }
+    case Some((ei, ej)) =>
+      board(ei)(ej) = FullGridCell(animal, visited = true)
+      board(i)(j) = EmptyGridCell(0)
+    case None => ()
+  }
 
   def updateSheep(): Unit = {
     for {
@@ -256,13 +267,13 @@ class GrassSheepWolf extends PApplet {
       val x = PApplet.map(j, 0, game.parameters.cols, 0, width)
       val y = PApplet.map(i, 0, game.parameters.row, 0, width)
       fill(c)
-      circle(x + diameter/2, y + diameter/2, diameter)
+      circle(x + diameter / 2, y + diameter / 2, diameter)
     }
   }
 
   def drawCounts(): Unit = {
     val toShow = counts.take(100)
-    val (maxGrass, maxSheep, maxWolf) = toShow.foldLeft((0, 0, 0)){
+    val (maxGrass, maxSheep, maxWolf) = toShow.foldLeft((0, 0, 0)) {
       case ((mg, ms, mw), (gr, s, w)) => (Math.max(mg, gr), Math.max(ms, s), Math.max(mw, w))
     }
     pushStyle()
