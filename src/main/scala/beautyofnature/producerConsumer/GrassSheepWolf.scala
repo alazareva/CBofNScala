@@ -127,11 +127,12 @@ class Game(val board: Array[Array[GridCell]], val parameters: GameParameters) {
         val newSheep = Sheep(e - parameters.shepStepCost)
         randomNeighborIndex(i, j)(_.isGrass) match {
           case Some((ni, nj)) =>
-            if (newSheep.energy > parameters.sheepEnergy) {
-              board(ni)(nj) = FullGridCell(Sheep(newSheep.energy / 2), visited = true)
-              board(i)(j) = FullGridCell(Sheep(newSheep.energy / 2), visited = true)
+            val newEnergy = newSheep.energy + parameters.grassEnergy
+            board(ni)(nj) = FullGridCell(Sheep(newEnergy), visited = true)
+            if (newEnergy > parameters.sheepEnergy) {
+              board(ni)(nj) = FullGridCell(Sheep(newEnergy / 2), visited = true)
+              board(i)(j) = FullGridCell(Sheep(newEnergy / 2), visited = true)
             } else {
-              board(ni)(nj) = FullGridCell(Sheep(newSheep.energy + parameters.grassEnergy), visited = true)
               board(i)(j) = EmptyGridCell(0)
             }
           case None => moveToRandomEmptyCell(i, j, newSheep)
@@ -150,11 +151,12 @@ class Game(val board: Array[Array[GridCell]], val parameters: GameParameters) {
         val newWolf = Wolf(e - parameters.wolfStepConst)
         randomNeighborIndex(i, j)(c => c.isSheep || c.isGrass) match {
           case Some((ni, nj)) =>
-            if (newWolf.energy > parameters.wolfEnergy) {
-              board(ni)(nj) = FullGridCell(Wolf(newWolf.energy / 2), visited = true)
-              board(i)(j) = FullGridCell(Wolf(newWolf.energy / 2), visited = true)
+            val newEnergy = if (board(ni)(nj).isSheep) newWolf.energy + parameters.sheepEnergy else newWolf.energy
+            board(ni)(nj) = FullGridCell(Wolf(newEnergy), visited = true)
+            if (newEnergy > parameters.wolfEnergy) {
+              board(ni)(nj) = FullGridCell(Wolf(newEnergy / 2), visited = true)
+              board(i)(j) = FullGridCell(Wolf(newEnergy / 2), visited = true)
             } else {
-              board(ni)(nj) = FullGridCell(Wolf(newWolf.energy + parameters.sheepEnergy), visited = true)
               board(i)(j) = EmptyGridCell(0)
             }
           case None => moveToRandomEmptyCell(i, j, newWolf)
