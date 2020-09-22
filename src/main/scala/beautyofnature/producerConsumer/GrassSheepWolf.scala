@@ -2,11 +2,13 @@ package beautyofnature.producerConsumer
 
 import processing.core.{PApplet, PConstants}
 
+import scala.annotation.tailrec
 import scala.util.Random
 
 trait Species {
   def energy: Float
 }
+
 case class Grass(energy: Float) extends Species
 case class Sheep(energy: Float) extends Species
 case class Wolf(energy: Float) extends Species
@@ -175,6 +177,15 @@ class Game(val board: Array[Array[GridCell]], val parameters: GameParameters) {
 
 object Game {
 
+  def emptyCells(board: Array[Array[GridCell]], rows: Int, cols: Int): List[(Int, Int)] = {
+    val matches = for {
+      i <- 0 until rows
+      j <- 0 until cols
+      if board(i)(j).isEmpty
+    } yield (i, j)
+    matches.toList
+  }
+
   def apply(parameters: GameParameters): Game = {
     val board = Array.ofDim[GridCell](parameters.row, parameters.cols)
     for {
@@ -182,43 +193,26 @@ object Game {
       j <- 0 until parameters.cols
     } board(i)(j) = EmptyGridCell(0)
 
-
-    def emptyCells(board: Array[Array[GridCell]]): List[(Int, Int)] = {
-      val matches = for {
-        i <- 0 until parameters.row
-        j <- 0 until parameters.cols
-        if board(i)(j).isEmpty
-      } yield (i, j)
-      matches.toList
-    }
-
-    def randomEmptyCell(board: Array[Array[GridCell]]): Option[(Int, Int)] = {
-      emptyCells(board) match {
-        case Nil => None
-        case list => Some(list(Random.nextInt(list.size)))
+    @tailrec
+    def addToBoard(remGrass: Int, remSheep: Int, remWolves: Int, emptyCells: List[(Int, Int)]): Unit = {
+      if ((remGrass == 0 && remSheep == 0 && remWolves == 0) || emptyCells.isEmpty) ()
+      else {
+        val (i, j) :: tail = emptyCells
+        if (remGrass > 0) {
+          board(i)(j) = FullGridCell(Grass(parameters.grassEnergy), visited = false)
+          addToBoard(remGrass - 1, remSheep, remWolves, tail)
+        } else if (remSheep > 0) {
+          board(i)(j) = FullGridCell(Sheep(parameters.sheepEnergy), visited = false)
+          addToBoard(remGrass, remSheep - 1, remWolves, tail)
+        } else {
+          board(i)(j) = FullGridCell(Wolf(parameters.wolfEnergy), visited = false)
+          addToBoard(remGrass, remSheep, remWolves - 1, tail)
+        }
       }
     }
 
-    for (_ <-  0 until parameters.initialGrass) {
-      randomEmptyCell(board) match {
-        case None => ()
-        case Some((i, j)) => board(i)(j) = FullGridCell(Grass(parameters.grassEnergy), visited = false)
-      }
-    }
-
-    for (_ <-  0 until parameters.initialSheep) {
-      randomEmptyCell(board) match {
-        case None => ()
-        case Some((i, j)) => board(i)(j) = FullGridCell(Sheep(parameters.sheepEnergy), visited = false)
-      }
-    }
-
-    for (_ <-  0 until parameters.initialWolf) {
-      randomEmptyCell(board) match {
-        case None => ()
-        case Some((i, j)) => board(i)(j) = FullGridCell(Wolf(parameters.wolfEnergy), visited = false)
-      }
-    }
+    val randomCells = Random.shuffle(emptyCells(board, parameters.row, parameters.cols))
+    addToBoard(parameters.initialGrass, parameters.initialSheep, parameters.initialWolf, randomCells)
 
     new Game(board, parameters)
   }
@@ -300,9 +294,7 @@ class GrassSheepWolf extends PApplet {
       curveVertex(x, y)
     }
     endShape()
-
     popStyle()
-
   }
 
   override def draw(): Unit = {
