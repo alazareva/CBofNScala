@@ -20,7 +20,7 @@ object Automata {
   }
 }
 
-class Automata(var arr: Array[Int], states: Int, radius: Int, val config: AutomataConfig) {
+class Automata(private var arr: Array[Int], val states: Int, radius: Int, val config: AutomataConfig) {
 
   def generate(i: Int): Array[Int] = {
     val newA = Array.fill(config.width + 2 * radius + 2)(0)
@@ -66,15 +66,21 @@ class Automata(var arr: Array[Int], states: Int, radius: Int, val config: Automa
 
 object AutomataConfigs {
   val triangle = AutomataConfig(
-      "01010", //"01010",
-      "101", //"11",
-      640
+    "01010", //"01010",
+    "101", //"11",
+    640
+  )
+
+  val triangle2 = AutomataConfig(
+    "2012122222",
+    "1220202020200000222221021002001012",
+    640
   )
 }
 
 class CellularAutomata extends PApplet {
 
-  val automataConfig: AutomataConfig = AutomataConfigs.triangle
+  val automataConfig: AutomataConfig = AutomataConfigs.triangle2
   val automata: Automata = Automata(automataConfig)
 
   override def settings(): Unit = {
@@ -90,10 +96,10 @@ class CellularAutomata extends PApplet {
   override def draw(): Unit = {
     val j = frameCount
     val arr = automata.generate(j)
-    arr.zipWithIndex.foreach{ case (v, i) => {
-      stroke(v * 255)
+    arr.zipWithIndex.foreach { case (v, i) =>
+      stroke(PApplet.map(v, 0, automata.states - 1, 0, 255))
       point(i, j)
-    }}
+    }
     if (j == height) noLoop()
   }
 }
