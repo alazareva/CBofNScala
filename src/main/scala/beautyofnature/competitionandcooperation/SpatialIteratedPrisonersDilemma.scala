@@ -12,6 +12,10 @@ trait Strategy {
 object Strategy {
   val COOPERATE = 0
   val DEFECT = 1
+
+  def flip(v: Int): Int = if (v == COOPERATE) DEFECT else COOPERATE
+
+  def random: Int = Random.nextInt(2)
 }
 
 case object AlwaysCooperate extends Strategy {
@@ -34,7 +38,7 @@ case class RandomStrategy(rcp: Float) extends Strategy {
 
 case object Pavlov extends Strategy {
   override def move(lastOtherMove: Int, lastOwnMove: Int): Int =
-    if (lastOtherMove == Strategy.DEFECT) ~lastOwnMove else lastOwnMove
+    if (lastOtherMove == Strategy.DEFECT) Strategy.flip(lastOwnMove) else lastOwnMove
 
   override def displayName: String = "Pavlov"
 }
@@ -45,43 +49,55 @@ case object AlwaysDefect extends Strategy {
   override def displayName: String = "Always Defect"
 }
 
+case class SpatialIteratedPrisonersDilemmaConfig(w: Int, h: Int, rounds: Int, rcp: Float, noise: Float,
+                                            CC: Int, CD: Int, DC: Int, DD: Int)
+
+object SpatialIteratedPrisonersDilemmaConfigs {
+
+  val default = SpatialIteratedPrisonersDilemmaConfig(400, 400, 5, 0.5f, 0.01f, 3, 0, 5, 1)
+
+}
+
 class SpatialIteratedPrisonersDilemma extends PApplet {
 
-  val w = 200
-  val h = 200
-  val rounds = 5
-  val CC = 3
-  val CD = 0
-  val DC = 5
-  val DD = 1
-  val rcp = 0.5f
+  val config = SpatialIteratedPrisonersDilemmaConfigs.default
 
-  val int2pos = Array(
+  val w = config.w
+  val h = config.h
+  val rounds = config.rounds
+  val CC = config.CC
+  val CD = config.CD
+  val DC = config.DC
+  val DD = config.DD
+  val rcp = config.rcp
+  val noise = config.noise
+
+  val INT2POS = Array(
     (-1, 0),
     (-1, 1),
     (0, 1),
     (1, 1)
   )
 
-  def posFromInt(i: Int): (Int, Int) = int2pos(i)
+  def posFromInt(i: Int): (Int, Int) = INT2POS(i)
 
-  val pos2int = Array(
+  val POS2INT = Array(
     Array(5, 3, 0),
     Array(6, -1, 1),
     Array(7, 4, 2)
   )
 
-  def intFromPos(i: Int, j: Int): Int = pos2int(i + 1)(j + 1)
+  def intFromPos(i: Int, j: Int): Int = POS2INT(i + 1)(j + 1)
 
-  val strats = Array(AlwaysCooperate, TitForTat, RandomStrategy(rcp), Pavlov, AlwaysDefect)
+  val availableStrategies = Array(AlwaysCooperate, TitForTat, RandomStrategy(rcp), Pavlov, AlwaysDefect)
 
-  def randomStrategy: Strategy = strats(Random.nextInt(strats.length))
+  def randomStrategy: Strategy = availableStrategies(Random.nextInt(availableStrategies.length))
 
   val scores = Array.fill(h, w)(0.0f)
   var strategies = Array.fill(h, w)(randomStrategy)
   var actions = Array.fill(h,w)(Strategy.COOPERATE)
   var lastActions = Array.fill(h, w)(Strategy.COOPERATE)
-  var newStrategy = strategies
+  var newStrategies = strategies
 
   override def settings(): Unit = {
     size(w, h + 100, PConstants.P2D)
@@ -92,7 +108,7 @@ class SpatialIteratedPrisonersDilemma extends PApplet {
     frameRate = 1
   }
 
-  def getBit(num: Int, bit: Int): Int =  (num >> (bit - 1)) & 1
+  def getBit(num: Int, bit: Int): Int = if (((1 << bit) & num) == 0) 0 else 1
 
   def setBit(num: Int, bit: Int, value: Int): Int = if (value == 1) num | (1 << bit) else num & ~(1 << bit)
 
@@ -111,16 +127,16 @@ class SpatialIteratedPrisonersDilemma extends PApplet {
       val jj = (j + h + l) % h
 
       val prev1 = getBit(lastActions(j)(i), intFromPos(k, l))
-      val prev2 = getBit(lastActions(ii)(jj), intFromPos(-k, -l))
+      val prev2 = getBit(lastActions(jj)(ii), intFromPos(-k, -l))
 
-      val action1 = strategies(j)(i).move(prev2, prev1)
-      val action2 = strategies(jj)(ii).move(prev1, prev2)
+      val action1 = if (Random.nextFloat < noise) Strategy.random else strategies(j)(i).move(prev2, prev1)
+      val action2 = if (Random.nextFloat < noise) Strategy.random else strategies(jj)(ii).move(prev1, prev2)
 
       scores(j)(i) += payoff(action1, action2)
       scores(jj)(ii) += payoff(action2, action1)
 
       actions(j)(i) = setBit(actions(j)(i), intFromPos(k, l), action1)
-      actions(jj)(ii) = setBit(actions(jj)(ii), intFromPos(-k, -l), action1)
+      actions(jj)(ii) = setBit(actions(jj)(ii), intFromPos(-k, -l), action2)
     }
   }
 
@@ -139,9 +155,8 @@ class SpatialIteratedPrisonersDilemma extends PApplet {
     } yield {
       ((i + w + k) % w, (j + h + l) % h)
     }
-
-    val ((ii, jj), _) = idxs.tail.foldLeft((idxs.head, -1f)){ case (((besti, bestj), bestScore), (ic, jc)) =>
-      if (scores(jc)(ic) > bestScore) ((ic, jc), scores(jc)(ic)) else ((besti, bestj), bestScore)
+    val ((ii, jj), b) = idxs.foldLeft(((0, 0), -1f)){ case (((bestI, bestJ), bestScore), (ic, jc)) =>
+      if (scores(jc)(ic) > bestScore) ((ic, jc), scores(jc)(ic)) else ((bestI, bestJ), bestScore)
     }
     strategies(jj)(ii)
   }
@@ -156,7 +171,7 @@ class SpatialIteratedPrisonersDilemma extends PApplet {
   }
 
   def update(n: Int): Unit = {
-    (0 until n).foreach {_ =>
+    (0 until n).foreach { _ =>
       update()
       val temp = actions
       actions = lastActions
@@ -191,11 +206,11 @@ class SpatialIteratedPrisonersDilemma extends PApplet {
       j <- 0 until h
       i <- 0 until w
     } {
-        newStrategy(j)(i) = bestStrategy(i, j)
+        newStrategies(j)(i) = bestStrategy(i, j)
     }
     val temp = strategies
-    strategies = newStrategy
-    newStrategy = temp
+    strategies = newStrategies
+    newStrategies = temp
   }
 
   def showStats(): Unit = {
@@ -204,7 +219,7 @@ class SpatialIteratedPrisonersDilemma extends PApplet {
     val valueCount = strategies.flatten.groupBy(_.displayName).map {
       case (k, values) => (k, values.length)
     }
-    strats.zipWithIndex.foreach { case (s, i) =>
+    availableStrategies.zipWithIndex.foreach { case (s, i) =>
       fill(getColor(s))
       val y = h + 30 + 15 * i
       circle(20, y - 3, 6)
@@ -232,6 +247,3 @@ object SpatialIteratedPrisonersDilemma extends PApplet {
     PApplet.main("beautyofnature.competitionandcooperation.SpatialIteratedPrisonersDilemma")
   }
 }
-
-
-
