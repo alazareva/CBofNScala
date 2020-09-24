@@ -34,7 +34,6 @@ class Bifurcation extends PApplet {
 
   override def draw(): Unit = {
     background(255)
-    print(config.rMin + frameCount * rStep)
     (0 until width).foreach { i =>
       val r = PApplet.map(i, 0, width, config.rMin + frameCount * rStep, config.rMax)
 

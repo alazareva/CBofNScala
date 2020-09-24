@@ -35,7 +35,6 @@ class HodgepodgeMachine extends PApplet {
     } {
       val nx = x + i
       val ny = y + j
-      // TODO handle wrap
       if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
         sum += oldState(ny)(nx)
         if (oldState(ny)(nx) == states - 1) numill += 1
