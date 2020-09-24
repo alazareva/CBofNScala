@@ -1,5 +1,7 @@
 package beautyofnature.competitionandcooperation
 
+import processing.core.{PApplet, PConstants}
+
 import scala.util.Random
 
 trait Strategy {
@@ -19,8 +21,8 @@ case object TitForTat extends Strategy {
   override def move(lastOtherMove: Int, lastOwnMove: Int): Int = lastOtherMove
 }
 
-case class Random(rcp: Float) extends Strategy {
-  override def move(lastOtherMove: Int, lastOwnMove: Int): Int = if (Random.nextFloat < rcp) 0 else 1
+case class RandomStrategy(rcp: Float) extends Strategy {
+  override def move(lastOtherMove: Int, lastOwnMove: Int): Int = if (Random.nextFloat() < rcp) 0 else 1
 }
 
 case object Pavlov extends Strategy {
@@ -32,7 +34,7 @@ case object AlwaysDefect extends Strategy {
   override def move(lastOtherMove: Int, lastOwnMove: Int): Int = Strategy.DEFECT
 }
 
-class SpatialIteratedPrisonersDilemma extends App {
+class SpatialIteratedPrisonersDilemma extends PApplet {
 
   val w = 200
   val h = 200
@@ -41,7 +43,7 @@ class SpatialIteratedPrisonersDilemma extends App {
   val CD = 0
   val DC = 5
   val DD = 1
-  val rcp = 0.5
+  val rcp = 0.5f
 
   val int2pos = Array(
     (-1, 0),
@@ -50,8 +52,7 @@ class SpatialIteratedPrisonersDilemma extends App {
     (1, 1)
   )
 
-  def int2posI(i: Int): Int = int2pos(i)._1
-  def int2posJ(i: Int): Int = int2pos(i)._2
+  def posFromInt(i: Int): (Int, Int) = int2pos(i)
 
   val pos2int = Array(
     Array(5, 3, 0),
@@ -59,7 +60,165 @@ class SpatialIteratedPrisonersDilemma extends App {
     Array(7, 4, 2)
   )
 
-  def pos2int(i: Int, j: Int) = pos2int(i + 1)(j + 1)
+  def intFromPos(i: Int, j: Int): Int = pos2int(i + 1)(j + 1)
+
+  val strats = Array(AlwaysCooperate, TitForTat, RandomStrategy(rcp), Pavlov, AlwaysDefect)
+
+  def randomStrategy: Strategy = strats(Random.nextInt(strats.length))
+
+  val scores = Array.fill(h, w)(0.0f)
+  var strategies = Array.fill(h, w)(randomStrategy)
+  var actions = Array.fill(h,w)(Strategy.COOPERATE)
+  var lastActions = Array.fill(h, w)(Strategy.COOPERATE)
+  var newStrategy = strategies
+
+  override def settings(): Unit = {
+    size(w, h + 100, PConstants.P2D)
+  }
+
+  override def setup(): Unit = {
+    colorMode(PConstants.HSB, 360, 100, 100)
+  }
+
+  def getBit(num: Int, bit: Int): Int =  (num >> (bit - 1)) & 1
+
+  def setBit(num: Int, bit: Int, value: Int): Int = if (value == 1) num | (1 << bit) else num & ~(1 << bit)
+
+  def payoff(s1: Int, s2: Int) = (s1, s2) match {
+    case (Strategy.DEFECT, Strategy.DEFECT) => DD
+    case (Strategy.DEFECT, Strategy.COOPERATE) => DC
+    case (Strategy.COOPERATE, Strategy.COOPERATE) => CC
+    case _ => CD
+  }
+
+
+
+  def updateCell(i: Int, j: Int): Unit = {
+    (0 until 4).foreach { wi =>
+      val (k, l) = posFromInt(wi)
+
+      val ii = (i + w + k) % w
+      val jj = (j + h + l) % h
+
+      val prev1 = getBit(lastActions(j)(i), intFromPos(k, l))
+      val prev2 = getBit(lastActions(ii)(jj), intFromPos(-k, -l))
+
+      val action1 = strategies(j)(i).move(prev2, prev1)
+      val action2 = strategies(jj)(ii).move(prev1, prev2)
+
+      scores(j)(i) += payoff(action1, action2)
+      scores(jj)(ii) += payoff(action2, action1)
+
+      actions(j)(i) = setBit(actions(j)(i), intFromPos(k, l), action1)
+      actions(jj)(ii) = setBit(actions(jj)(ii), intFromPos(-k, -l), action1)
+    }
+  }
+
+  def getColor(s: Strategy): Int = s match {
+    case AlwaysCooperate => color(120, 100, 100) // green
+    case AlwaysDefect => color(0, 100, 100) // red
+    case TitForTat => color(300, 100, 100) // purple
+    case _: RandomStrategy => color(60, 100, 100) // yellow
+    case Pavlov => color(180, 100, 100) // blue
+  }
+
+  def bestStrategy(i: Int, j: Int): Strategy = {
+    val idxs = for {
+      k <- -1 to 1
+      l <- -1 to 1
+    } yield {
+      ((i + w + k) % w, (j + h + l) % h)
+    }
+
+    val ((ii, jj), _) = idxs.tail.foldLeft((idxs.head, -1f)){ case (((besti, bestj), bestScore), (ic, jc)) =>
+      if (scores(jc)(ic) > bestScore) ((ic, jc), scores(jc)(ic)) else ((besti, bestj), bestScore)
+    }
+    strategies(jj)(ii)
+  }
+
+  def update(): Unit = {
+    for {
+      j <- 0 until h
+      i <- 0 until w
+    } {
+      updateCell(i, j)
+    }
+  }
+
+  def update(n: Int): Unit = {
+    (0 until n).foreach {_ =>
+      update()
+      val temp = actions
+      actions = lastActions
+      lastActions = temp
+    }
+  }
+
+  def reset(): Unit = {
+    for {
+      j <- 0 until h
+      i <- 0 until w
+    } {
+      actions(j)(i) = Strategy.COOPERATE
+      lastActions(j)(i) = Strategy.COOPERATE
+      scores(j)(i) = 0.0f
+    }
+  }
+
+  def showStrategies(): Unit = {
+    for {
+      j <- 0 until h
+      i <- 0 until w
+    } {
+      val c = getColor(strategies(j)(i))
+      stroke(c)
+      point(i, j)
+    }
+  }
+
+  def updateStrategies(): Unit = {
+    for {
+      j <- 0 until h
+      i <- 0 until w
+    } {
+        newStrategy(j)(i) = bestStrategy(i, j)
+    }
+    val temp = strategies
+    strategies = newStrategy
+    newStrategy = temp
+  }
+
+  def showStats(): Unit = {
+    val valueCount = strategies.flatten.groupBy(_.getClass.getSimpleName).map {
+      case (k, values) => (k, values.length)
+    }
+    strats.zipWithIndex.foreach { case (s, i) => {
+      fill(getColor(s))
+      circle(20, h + 20, 3)
+      fill(0)
+      val name = s.getClass.getSimpleName
+      text(f"$name: ${(valueCount.getOrElse(name, 0) * 1f) / (w * h)}%1.3f", 20, h + 20 * i)
+    }
+    }
+  }
+
+  override def draw(): Unit = {
+    background(360)
+    reset()
+    showStrategies()
+    showStats()
+    update(rounds)
+    updateStrategies()
+  }
+
 }
+
+object SpatialIteratedPrisonersDilemma extends PApplet {
+
+  def main(args: Array[String]): Unit = {
+    PApplet.main("beautyofnature.competitionandcooperation.SpatialIteratedPrisonersDilemma")
+  }
+}
+
 
 
