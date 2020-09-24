@@ -113,8 +113,12 @@ class Termites extends PApplet {
 
   }
 
+  def update(n: Int): Unit = {
+    (0 until n).foreach(_ => update())
+  }
+
   override def draw(): Unit = {
-    update()
+    update(10)
     for {
       i <- 0 until w
       j <- 0 until h
