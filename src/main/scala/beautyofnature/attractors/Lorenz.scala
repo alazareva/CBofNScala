@@ -1,4 +1,4 @@
-package beautyofnature.attractorss
+package beautyofnature.attractors
 
 import processing.core.{PApplet, PConstants}
 
@@ -58,6 +58,6 @@ class Lorenz extends PApplet {
 object Lorenz extends PApplet {
 
   def main(args: Array[String]): Unit = {
-    PApplet.main("beautyofnature.attractorss.Lorenz")
+    PApplet.main("beautyofnature.attractors.Lorenz")
   }
 }

@@ -1,4 +1,4 @@
-package beautyofnature.cellularAutomata
+package beautyofnature.cellularautomata
 
 import processing.core.{PApplet, PConstants}
 
@@ -90,7 +90,7 @@ class GameOfLife extends PApplet {
 object GameOfLife extends PApplet {
 
   def main(args: Array[String]): Unit = {
-    PApplet.main("beautyofnature.cellularAutomata.GameOfLife")
+    PApplet.main("beautyofnature.cellularautomata.GameOfLife")
   }
 }
 

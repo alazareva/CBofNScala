@@ -1,4 +1,4 @@
-package beautyofnature.affineTransformations
+package beautyofnature.affinetransformations
 
 import processing.core.{PApplet, PConstants}
 
@@ -90,6 +90,6 @@ class IteratedFunctionalSystems extends PApplet {
 object IteratedFunctionalSystems extends PApplet {
 
   def main(args: Array[String]): Unit = {
-    PApplet.main("beautyofnature.affineTransformations.IteratedFunctionalSystems")
+    PApplet.main("beautyofnature.affinetransformations.IteratedFunctionalSystems")
   }
 }

@@ -1,4 +1,4 @@
-package beautyofnature.producerConsumer
+package beautyofnature.producerconsumer
 
 import processing.core.{PApplet, PConstants}
 
@@ -322,6 +322,6 @@ class GrassSheepWolf extends PApplet {
 object GrassSheepWolf extends PApplet {
 
   def main(args: Array[String]): Unit = {
-    PApplet.main("beautyofnature.producerConsumer.GrassSheepWolf")
+    PApplet.main("beautyofnature.producerconsumer.GrassSheepWolf")
   }
 }

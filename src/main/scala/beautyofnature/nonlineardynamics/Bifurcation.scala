@@ -1,4 +1,4 @@
-package beautyofnature.nonlinearDynamics
+package beautyofnature.nonlineardynamics
 
 import processing.core.{PApplet, PConstants}
 
@@ -64,6 +64,6 @@ class Bifurcation extends PApplet {
 object Bifurcation extends PApplet {
 
   def main(args: Array[String]): Unit = {
-    PApplet.main("beautyofnature.nonlinearDynamics.Bifurcation")
+    PApplet.main("beautyofnature.nonlineardynamics.Bifurcation")
   }
 }

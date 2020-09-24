@@ -1,4 +1,4 @@
-package beautyofnature.affineTransformations
+package beautyofnature.affinetransformations
 
 case class TransformationRule(a: Float, b: Float, c: Float, d: Float, e: Float, f: Float)
 

@@ -1,4 +1,4 @@
-package beautyofnature.mandelbrotAndJulia
+package beautyofnature.mandelbrotandjulia
 
 case class ComplexNumber(r: Double, i: Double) {
   override def toString: String = f"($r + $i i)"

@@ -1,4 +1,4 @@
-package beautyofnature.affineTransformations
+package beautyofnature.affinetransformations
 
 import processing.core.{PApplet, PConstants}
 
@@ -117,6 +117,6 @@ class AffineTransformations extends PApplet {
 object AffineTransformations extends PApplet {
 
   def main(args: Array[String]): Unit = {
-    PApplet.main("beautyofnature.affineTransformations.AffineTransformations")
+    PApplet.main("beautyofnature.affinetransformations.AffineTransformations")
   }
 }

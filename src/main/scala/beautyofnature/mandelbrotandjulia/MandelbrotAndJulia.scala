@@ -1,4 +1,4 @@
-package beautyofnature.mandelbrotAndJulia
+package beautyofnature.mandelbrotandjulia
 
 import processing.core.{PApplet, PConstants}
 
@@ -160,6 +160,6 @@ class MandelbrotAndJulia extends PApplet {
 object MandelbrotAndJulia extends PApplet {
 
   def main(args: Array[String]): Unit = {
-    PApplet.main("beautyofnature.mandelbrotAndJulia.MandelbrotAndJulia")
+    PApplet.main("beautyofnature.mandelbrotandjulia.MandelbrotAndJulia")
   }
 }
