@@ -6,6 +6,7 @@ import scala.util.Random
 
 trait Strategy {
   def move(lastOtherMove: Int, lastOwnMove: Int): Int
+  def displayName: String
 }
 
 object Strategy {
@@ -15,23 +16,33 @@ object Strategy {
 
 case object AlwaysCooperate extends Strategy {
   override def move(lastOtherMove: Int, lastOwnMove: Int): Int = Strategy.COOPERATE
+
+  override def displayName: String = "Always Cooperate"
 }
 
 case object TitForTat extends Strategy {
   override def move(lastOtherMove: Int, lastOwnMove: Int): Int = lastOtherMove
+
+  override def displayName: String = "Tit for Tat"
 }
 
 case class RandomStrategy(rcp: Float) extends Strategy {
   override def move(lastOtherMove: Int, lastOwnMove: Int): Int = if (Random.nextFloat() < rcp) 0 else 1
+
+  override def displayName: String = "Random"
 }
 
 case object Pavlov extends Strategy {
   override def move(lastOtherMove: Int, lastOwnMove: Int): Int =
     if (lastOtherMove == Strategy.DEFECT) ~lastOwnMove else lastOwnMove
+
+  override def displayName: String = "Pavlov"
 }
 
 case object AlwaysDefect extends Strategy {
   override def move(lastOtherMove: Int, lastOwnMove: Int): Int = Strategy.DEFECT
+
+  override def displayName: String = "Always Defect"
 }
 
 class SpatialIteratedPrisonersDilemma extends PApplet {
@@ -78,20 +89,19 @@ class SpatialIteratedPrisonersDilemma extends PApplet {
 
   override def setup(): Unit = {
     colorMode(PConstants.HSB, 360, 100, 100)
+    frameRate = 1
   }
 
   def getBit(num: Int, bit: Int): Int =  (num >> (bit - 1)) & 1
 
   def setBit(num: Int, bit: Int, value: Int): Int = if (value == 1) num | (1 << bit) else num & ~(1 << bit)
 
-  def payoff(s1: Int, s2: Int) = (s1, s2) match {
+  def payoff(s1: Int, s2: Int): Int = (s1, s2) match {
     case (Strategy.DEFECT, Strategy.DEFECT) => DD
     case (Strategy.DEFECT, Strategy.COOPERATE) => DC
     case (Strategy.COOPERATE, Strategy.COOPERATE) => CC
     case _ => CD
   }
-
-
 
   def updateCell(i: Int, j: Int): Unit = {
     (0 until 4).foreach { wi =>
@@ -189,17 +199,20 @@ class SpatialIteratedPrisonersDilemma extends PApplet {
   }
 
   def showStats(): Unit = {
-    val valueCount = strategies.flatten.groupBy(_.getClass.getSimpleName).map {
+    pushStyle()
+    noStroke()
+    val valueCount = strategies.flatten.groupBy(_.displayName).map {
       case (k, values) => (k, values.length)
     }
-    strats.zipWithIndex.foreach { case (s, i) => {
+    strats.zipWithIndex.foreach { case (s, i) =>
       fill(getColor(s))
-      circle(20, h + 20, 3)
+      val y = h + 30 + 15 * i
+      circle(20, y - 3, 6)
       fill(0)
-      val name = s.getClass.getSimpleName
-      text(f"$name: ${(valueCount.getOrElse(name, 0) * 1f) / (w * h)}%1.3f", 20, h + 20 * i)
+      val name = s.displayName
+      text(f"$name: ${(valueCount.getOrElse(name, 0) * 1f) / (w * h)}%1.3f", 30, y)
     }
-    }
+    popStyle()
   }
 
   override def draw(): Unit = {
