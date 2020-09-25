@@ -5,24 +5,23 @@ import processing.core.{PApplet, PConstants}
 import scala.util.Random
 
 
-
 case class Neuron(state: Double, nextState: Double, activation: Double, inputs: Double, cost: Double)
 
 
 object HopfieldData {
 
   val default = Array(
-    Array(10.0,	5.0,	4.0,	6.0,	5.0,	1.0),
-    Array(6.0,	4.0,	9.0,	7.0,	3.0,	2.0),
-    Array(1.0,	8.0,	3.0,	6.0,	4.0,	6.0),
-    Array(5.0,	3.0,	7.0,	2.0,	1.0,	4.0),
-    Array(3.0,	2.0,	5.0,	6.0,	8.0,	7.0),
-    Array(7.0,	6.0,	4.0,	1.0,	3.0,	2.0)
+    Array(10.0, 5.0, 4.0, 6.0, 5.0, 1.0),
+    Array(6.0, 4.0, 9.0, 7.0, 3.0, 2.0),
+    Array(1.0, 8.0, 3.0, 6.0, 4.0, 6.0),
+    Array(5.0, 3.0, 7.0, 2.0, 1.0, 4.0),
+    Array(3.0, 2.0, 5.0, 6.0, 8.0, 7.0),
+    Array(7.0, 6.0, 4.0, 1.0, 3.0, 2.0)
   )
 }
 
 
-class Hopfield extends PApplet{
+class Hopfield extends PApplet {
 
   val dt = 0.1
   val tau = 10.0
@@ -46,15 +45,15 @@ class Hopfield extends PApplet{
 
   override def setup(): Unit = {
     frameRate = 1
-    strokeWeight(0.5f)
-    stroke(100)
+    strokeWeight(1f)
+    stroke(200)
   }
 
   def sigmoid(x: Double): Double = Math.exp(x) / (Math.exp(x) + 1)
 
   def initializeNetwork(data: Array[Array[Double]]): Array[Array[Neuron]] = {
     val neurons = data.map(_.map(d => {
-      val randomState = - 1 + Random.nextDouble() * 2
+      val randomState = -1 + Random.nextDouble() * 2
       Neuron(randomState, 0.0, sigmoid(randomState), d, d)
     }))
     val activations = neurons.flatMap(_.map(_.inputs))
@@ -67,7 +66,7 @@ class Hopfield extends PApplet{
 
   def showNetwork(): Unit = {
     for {
-      i <- 0 until  dataW
+      i <- 0 until dataW
       j <- 0 until dataH
     } {
       fill(255 - network(j)(i).activation.toFloat * 255)
@@ -77,7 +76,7 @@ class Hopfield extends PApplet{
 
   def updateActivations(): Unit = {
     for {
-      i <- 0 until  dataW
+      i <- 0 until dataW
       j <- 0 until dataH
     } {
       network(j)(i) = {
@@ -89,14 +88,14 @@ class Hopfield extends PApplet{
 
   def updateStates(): Unit = {
     for {
-      i <- 0 until  dataW
+      i <- 0 until dataW
       j <- 0 until dataH
     } {
-      val rowSum = (0 until dataW).foldLeft(0.0){case (s, ni) =>
+      val rowSum = (0 until dataW).foldLeft(0.0) { case (s, ni) =>
         if (ni != i) s + -2 * network(j)(ni).activation else s
       }
 
-      val colSum = (0 until dataH).foldLeft(0.0){case (s, nj) =>
+      val colSum = (0 until dataH).foldLeft(0.0) { case (s, nj) =>
         if (nj != j) s + -2 * network(nj)(i).activation else s
       }
 
@@ -109,7 +108,7 @@ class Hopfield extends PApplet{
 
   def resetStates(): Unit = {
     for {
-      i <- 0 until  dataW
+      i <- 0 until dataW
       j <- 0 until dataH
     } {
       val n = network(j)(i)
@@ -123,9 +122,14 @@ class Hopfield extends PApplet{
     resetStates()
   }
 
+  def cost: Double = {
+    network.flatten.foldLeft(0.0) { (cost, n) => if (n.activation > 0.5) cost + n.cost else cost }
+  }
+
   override def draw(): Unit = {
     showNetwork()
     update()
+    println(cost)
   }
 }
 
