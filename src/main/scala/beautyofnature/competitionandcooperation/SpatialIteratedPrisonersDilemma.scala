@@ -6,6 +6,7 @@ import scala.util.Random
 
 trait Strategy {
   def move(lastOtherMove: Int, lastOwnMove: Int): Int
+
   def displayName: String
 }
 
@@ -50,7 +51,7 @@ case object AlwaysDefect extends Strategy {
 }
 
 case class SpatialIteratedPrisonersDilemmaConfig(w: Int, h: Int, rounds: Int, rcp: Float, noise: Float,
-                                            CC: Int, CD: Int, DC: Int, DD: Int)
+                                                 CC: Int, CD: Int, DC: Int, DD: Int)
 
 object SpatialIteratedPrisonersDilemmaConfigs {
 
@@ -95,7 +96,7 @@ class SpatialIteratedPrisonersDilemma extends PApplet {
 
   val scores = Array.fill(h, w)(0.0f)
   var strategies = Array.fill(h, w)(randomStrategy)
-  var actions = Array.fill(h,w)(Strategy.COOPERATE)
+  var actions = Array.fill(h, w)(Strategy.COOPERATE)
   var lastActions = Array.fill(h, w)(Strategy.COOPERATE)
   var newStrategies = strategies
 
@@ -155,7 +156,7 @@ class SpatialIteratedPrisonersDilemma extends PApplet {
     } yield {
       ((i + w + k) % w, (j + h + l) % h)
     }
-    val ((ii, jj), b) = idxs.foldLeft(((0, 0), -1f)){ case (((bestI, bestJ), bestScore), (ic, jc)) =>
+    val ((ii, jj), b) = idxs.foldLeft(((0, 0), -1f)) { case (((bestI, bestJ), bestScore), (ic, jc)) =>
       if (scores(jc)(ic) > bestScore) ((ic, jc), scores(jc)(ic)) else ((bestI, bestJ), bestScore)
     }
     strategies(jj)(ii)
@@ -206,7 +207,7 @@ class SpatialIteratedPrisonersDilemma extends PApplet {
       j <- 0 until h
       i <- 0 until w
     } {
-        newStrategies(j)(i) = bestStrategy(i, j)
+      newStrategies(j)(i) = bestStrategy(i, j)
     }
     val temp = strategies
     strategies = newStrategies

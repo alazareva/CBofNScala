@@ -9,7 +9,7 @@ case class Ant(x: Int, y: Int, dir: Int)
 class Ants extends PApplet {
   val w = 200
   val h = 200
-  val num = 2
+  val num = 6
   val p = 0.0
   val rule = "10"
   val states = rule.distinct.length
