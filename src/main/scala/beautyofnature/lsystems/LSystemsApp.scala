@@ -48,7 +48,6 @@ class Turtle(val turtleInfo: TurtleInfo, var lSystem: LSystem) {
   }
 }
 
-
 object LSystemCollection {
 
   val tree = new Turtle(
