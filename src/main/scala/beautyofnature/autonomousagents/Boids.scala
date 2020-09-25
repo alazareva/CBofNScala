@@ -13,26 +13,27 @@ class Boids extends PApplet {
 
   val w = 640
   val h = 480
-  val num = 20
+  val num = 40
   val len = 3
   val angle = 270f
   val vangle = 90f
   val minv = 0.5f
   val ddt  = 0.95f
-  val dt = 3.0f
-  val rcopy = 80
+  val dt = 1.0f
+  val rcopy = 60//80
   val rcent = 30
   val rviso = 40
-  val rvoid = 15
+  val rvoid = 20
   val wcopy = 0.2f
   val wcent = 0.4f
   val wviso = 0.8f
   val wvoid = 1.0f
   val wrand = 0.0f
+  val maxV = 1.5f
 
   val maxr = List(rviso, rcopy, rcent, rvoid).max
-  val cosangle = Math.cos(angle / 2)
-  val cosvangle = Math.cos(vangle / 2)
+  val cosangle = Math.cos(Math.toRadians(angle / 2))
+  val cosvangle = Math.cos(Math.toRadians(vangle / 2))
 
   def randomBoid: Boid = Boid(
     new PVector(Random.nextInt(w - 50), Random.nextInt(h - 50)),
@@ -52,12 +53,12 @@ class Boids extends PApplet {
       val u = Math.sqrt(ratio / (1 + ratio))
       val v = - vec.x * u / vec.y
       new PVector(u.toFloat, v.toFloat)
-    } else if (vec.x == 0) {
-      new PVector(1, vec.y)
-    } else if (vec.y == 0) {
-      new PVector(vec.x, 1)
+    } else if (vec.x != 0) {
+      new PVector(1, 0)
+    } else if (vec.y != 0) {
+      new PVector(0, 1)
     } else new PVector(0, 0)
-    if (PVector.dot(candidate, inDirectionOf) < 0) candidate.rotate(PConstants.HALF_PI) else candidate
+    if (PVector.dot(candidate, inDirectionOf) < 0) candidate.rotate(PConstants.PI) else candidate
   }
 
   def computeBoidHeading(i: Int): Unit = {
@@ -67,7 +68,6 @@ class Boids extends PApplet {
     val c = new PVector(0, 0)
     val d = new PVector(0, 0)
     val firstBoid = boids(i)
-    print(f"Velocity Before update ${firstBoid.velocity}")
     for {
       j <- boids.indices
       if i != j
@@ -75,37 +75,33 @@ class Boids extends PApplet {
       val secondBoid = boids(j)
       val distance = PVector.dist(firstBoid.position, secondBoid.position)
       if (distance <= maxr) {
-        val vector = PVector.sub(firstBoid.position, secondBoid.position)
+        val vector = PVector.sub(secondBoid.position, firstBoid.position)
         val cos = Math.cos(PVector.angleBetween(firstBoid.velocity, vector))
         if (cos >= cosangle) {
-
           if(distance <= rcent && distance > rvoid) {
-            a.add(PVector.sub(secondBoid.position, firstBoid.position))
+            a.add(vector)
             numCentered += 1
           }
           if (distance <= rcopy && distance > rvoid) b.add(secondBoid.velocity)
           if (distance <= rvoid) c.add(PVector.sub(firstBoid.position, secondBoid.position).normalize())
           if (distance <= rviso && cosvangle < cos) {
-            val temp = PVector.sub(firstBoid.position, vector)
-            val orth = orthogonal(temp, firstBoid.velocity)
-            val divBy = if (distance == 0) 1 else distance
-            val diff  = PVector.add(vector, orth).div(divBy)
+            val dist = PVector.sub(firstBoid.position, secondBoid.position)
+            val orth = orthogonal(dist, firstBoid.velocity)
+            val divBy = if (dist.mag() == 0) 1 else dist.mag()
+            val diff  = PVector.add(dist, orth).div(divBy)
             d.add(diff)
           }
         }
       }
     }
-    if (numCentered < 0) a.set(0, 0)
+    if (numCentered < 2) a.set(0, 0)
     a.normalize()
     b.normalize()
     c.normalize()
     d.normalize()
     val vt = a.mult(wcent).add(b.mult(wcopy)).add(c.mult(wvoid)).add(d.mult(wviso))
     val newVelocity = firstBoid.velocity.mult(ddt).add(vt.mult(1 - ddt))
-    val dd = newVelocity.mag()
-    if (dd < minv) newVelocity.mult(minv / dd)
-    firstBoid.newVelocity.set(newVelocity)
-    println(f"Velocity Before update ${firstBoid.newVelocity}")
+    firstBoid.newVelocity.set(newVelocity.setMag(maxV))
   }
 
   def update(): Unit = {
@@ -121,19 +117,27 @@ class Boids extends PApplet {
   }
 
   def drawBoid(boid: Boid): Unit = {
-    //println(boid.position.x)
     fill(0)
     pushMatrix()
     translate(boid.position.x, boid.position.y)
-    rotate(boid.velocity.heading())
-    triangle(-5, 0, 0, 20, 5, 0)
+    rotate(boid.velocity.heading() + PConstants.HALF_PI)
+    beginShape(PConstants.TRIANGLES)
+    vertex(0, -len * 2)
+    vertex(-len, len * 2)
+    vertex(len, len * 2)
+    endShape()
     popMatrix()
+  }
+
+  override def setup(): Unit = {
+    frameRate = 1
   }
 
   override def draw(): Unit = {
     background(255)
     boids.foreach(drawBoid)
     update()
+    //if (frameCount == 6) noLoop()
   }
 }
 
