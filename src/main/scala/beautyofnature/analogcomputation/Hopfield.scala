@@ -56,10 +56,10 @@ class Hopfield extends PApplet {
       val randomState = -1 + Random.nextDouble() * 2
       Neuron(randomState, 0.0, sigmoid(randomState), d, d)
     }))
-    val activations = neurons.flatMap(_.map(_.inputs))
-    val min = activations.min
-    val max = activations.max
-    val ave = activations.sum / activations.length
+    val inputs = neurons.flatMap(_.map(_.inputs))
+    val min = inputs.min
+    val max = inputs.max
+    val ave = inputs.sum / inputs.length
 
     neurons.map(_.map(n => n.copy(inputs = scale * (n.inputs - ave) / (max - min) + 2)))
   }
