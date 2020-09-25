@@ -5,9 +5,7 @@ import processing.core.{PApplet, PConstants, PVector}
 import scala.util.Random
 
 
-case class Boid(position: PVector, velocity: PVector, newVelocity: PVector) {
-
-}
+case class Boid(position: PVector, velocity: PVector, newVelocity: PVector)
 
 class Boids extends PApplet {
 
@@ -17,9 +15,9 @@ class Boids extends PApplet {
   val boidSize = 3
   val angle = 270f
   val visualAngle = 90f
-  val momentumFactor  = 0.95f
+  val momentumFactor = 0.95f
   val timeStep = 1.0f
-  val radiusCopy = 60//80
+  val radiusCopy = 60 //80
   val radiusCenter = 30
   val radiusVisualAvoidance = 40
   val radiusAvoidance = 20
@@ -35,9 +33,9 @@ class Boids extends PApplet {
 
   def randomBoid: Boid = Boid(
     new PVector(Random.nextInt(w - 50), Random.nextInt(h - 50)),
-    new PVector( -1 + Random.nextInt(3), -1 + Random.nextInt(3)).normalize(),
+    new PVector(-1 + Random.nextInt(3), -1 + Random.nextInt(3)).normalize(),
     new PVector(0, 0)
-    )
+  )
 
   val boids: Array[Boid] = Array.fill(numBoids)(randomBoid)
 
@@ -49,7 +47,7 @@ class Boids extends PApplet {
     val candidate = if (vec.x != 0 && vec.y != 0) {
       val ratio = Math.pow(vec.y / vec.x, 2)
       val u = Math.sqrt(ratio / (1 + ratio))
-      val v = - vec.x * u / vec.y
+      val v = -vec.x * u / vec.y
       new PVector(u.toFloat, v.toFloat)
     } else if (vec.x != 0) {
       new PVector(1, 0)
@@ -59,14 +57,14 @@ class Boids extends PApplet {
     if (PVector.dot(candidate, inDirectionOf) < 0) candidate.rotate(PConstants.PI) else candidate
   }
 
-  def otherBoidPosition(thisBoid: Boid, otherBoid: Boid): PVector = {
+  def getOtherBoidPosition(thisBoid: Boid, otherBoid: Boid): PVector = {
     val other = otherBoid.position
     val current = thisBoid.position
     val candidates = for {
       j <- List(-w, 0, w)
       k <- List(-h, 0, h)
-    } yield PVector.add(other,  new PVector(j, k))
-    candidates.foldLeft((other, PVector.dist(other, current))){ case (best, candidate) =>
+    } yield PVector.add(other, new PVector(j, k))
+    candidates.foldLeft((other, PVector.dist(other, current))) { case (best, candidate) =>
       val (bestV, minDist) = best
       val d = PVector.dist(candidate, current)
       if (d < minDist) (candidate, d) else best
@@ -85,20 +83,21 @@ class Boids extends PApplet {
       j <- boids.indices
       if i != j
     } {
-      val secondBoid = boids(j)
-      val distance = PVector.dist(firstBoid.position, secondBoid.position)
+      val otherBoid = boids(j)
+      val otherBoidPosition = getOtherBoidPosition(firstBoid, otherBoid)
+      val distance = PVector.dist(firstBoid.position, otherBoidPosition)
       if (distance <= maxRadius) {
-        val vector = PVector.sub(secondBoid.position, firstBoid.position)
+        val vector = PVector.sub(otherBoidPosition, firstBoid.position)
         val cos = Math.cos(PVector.angleBetween(firstBoid.velocity, vector))
         if (cos >= cosAngle) {
-          if(distance <= radiusCenter && distance > radiusAvoidance) {
+          if (distance <= radiusCenter && distance > radiusAvoidance) {
             a.add(vector)
             numCentered += 1
           }
-          if (distance <= radiusCopy && distance > radiusAvoidance) b.add(secondBoid.velocity)
-          if (distance <= radiusAvoidance) c.add(PVector.sub(firstBoid.position, secondBoid.position).normalize())
+          if (distance <= radiusCopy && distance > radiusAvoidance) b.add(otherBoid.velocity)
+          if (distance <= radiusAvoidance) c.add(PVector.sub(firstBoid.position, otherBoidPosition).normalize())
           if (distance <= radiusVisualAvoidance && cosVisualAngle < cos) {
-            val dist = PVector.sub(firstBoid.position, secondBoid.position)
+            val dist = PVector.sub(firstBoid.position, otherBoidPosition)
             val divBy = if (dist.mag() == 0) 1 else dist.mag()
             d.add(PVector.add(dist, orthogonal(dist, firstBoid.velocity)).div(divBy))
           }
@@ -120,7 +119,7 @@ class Boids extends PApplet {
 
   def update(): Unit = {
     boids.indices.foreach(computeBoidHeading)
-    boids.foreach{ boid =>
+    boids.foreach { boid =>
       boid.velocity.set(boid.newVelocity)
       boid.position.add(boid.velocity.mult(timeStep))
       if (boid.position.x < 0) boid.position.x += width
