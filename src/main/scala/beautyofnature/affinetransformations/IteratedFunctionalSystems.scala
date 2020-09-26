@@ -5,7 +5,6 @@ import processing.core.{PApplet, PConstants}
 import scala.util.Random
 
 
-
 case class IFSTransformation(rules: List[TransformationRule], minX: Float, maxX: Float,
                              minY: Float, maxY: Float, iterations: Int = 100) {
   val determinants: List[Float] = rules.map(r => Math.max(Math.abs(r.a * r.d - r.b * r.c), 0.01f))

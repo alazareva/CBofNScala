@@ -83,7 +83,7 @@ class LSystemsApp extends PApplet {
 
   var count = 0
 
-  val turtle: Turtle = LSystemCollection.squares
+  val turtle: Turtle = LSystemCollection.triangle
 
   override def settings(): Unit = {
     size(600, 600, PConstants.P2D)
