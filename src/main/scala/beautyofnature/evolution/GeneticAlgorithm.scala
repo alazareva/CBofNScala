@@ -30,16 +30,16 @@ trait Population[T <: Individual] {
     rec(0, 0.0)
   }
 
-  def reproduce(individual1: T, individual2: T): Array[T]
+  def reproduceTwo(individual1: T, individual2: T): Array[T]
 
-  def reproduceTwo(populationFitness: Array[Double]): Array[T] = {
+  def reproduce(populationFitness: Array[Double]): Array[T] = {
     val individual1 = selectOne(populationFitness)
     val individual2 = selectOne(populationFitness)
-    reproduce(individual1, individual2)
+    reproduceTwo(individual1, individual2)
   }
 
   def next()(implicit c: ClassTag[T]): Unit = {
-    individuals = (0 until individuals.length / 2).flatMap(_ => reproduceTwo(fitness)).toArray
+    individuals = (0 until individuals.length / 2).flatMap(_ => reproduce(fitness)).toArray
   }
 
   def population: List[T] = individuals.toList

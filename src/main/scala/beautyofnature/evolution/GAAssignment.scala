@@ -41,7 +41,7 @@ class AssignmentPopulation(
     arr
   }
 
-  override def reproduce(
+  override def reproduceTwo(
     individual1: AssignmentIndividual,
     individual2: AssignmentIndividual
   ): Array[AssignmentIndividual] = {

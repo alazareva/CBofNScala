@@ -37,7 +37,7 @@ class StringPopulation(val populationSize: Int,
 
   def mutate(c: Char): Char = if (Random.nextFloat < mutationRate) randomLetterOrSpace else c
 
-  override def reproduce(individual1: StringIndividual, individual2: StringIndividual): Array[StringIndividual] = {
+  override def reproduceTwo(individual1: StringIndividual, individual2: StringIndividual): Array[StringIndividual] = {
     val crossoverPoint = if (Random.nextFloat < crossoverRate) Random.nextInt(target.length) else target.length
     val s1 = individual1.s.take(crossoverPoint) + individual2.s.drop(crossoverPoint)
     val s2 = individual2.s.take(crossoverPoint) + individual1.s.drop(crossoverPoint)
