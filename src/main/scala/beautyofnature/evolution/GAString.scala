@@ -5,38 +5,28 @@ import processing.core.{PApplet, PConstants}
 
 import scala.util.Random
 
+case class StringIndividual(s: String) extends Individual
 
-case class Individual(s: String) {
-  def fitness(target: String): Double = {
-    val fit = s.zip(target).foldLeft(0) { case (f, (c1, c2)) => if (c1 == c2) f + 1 else f }
+class StringPopulation(val populationSize: Int,
+  crossoverRate: Float,
+  mutationRate: Float,
+  target: String) extends Population[StringIndividual] {
+
+  override var individuals: Array[StringIndividual] = Array.fill(populationSize)(randomIndividual)
+
+  override def individualFitness(individual: StringIndividual): Double = {
+    val fit = individual.s.zip(target).foldLeft(0) { case (f, (c1, c2)) => if (c1 == c2) f + 1 else f }
     Math.pow(2, fit - target.length)
   }
-}
 
-
-class Population(populationSize: Int, crossoverRate: Float, mutationRate: Float, target: String) {
-
-  var individuals: Array[Individual] = Array.fill(populationSize)(randomIndividual)
-
-  def randomIndividual: Individual = Individual((0 until target.length).map(_ => randomLetterOrSpace).mkString)
-
-  def fitness: Array[Double] = {
-    val rawFitness = individuals.map(_.fitness(target))
+  override def fitness: Array[Double] = {
+    val rawFitness = individuals.map(individualFitness)
     val total = rawFitness.sum
     if (total == 0) rawFitness else rawFitness.map(_ / total)
   }
 
-  def selectOne(populationFitness: Array[Double]): Individual = {
-    val p = Random.nextDouble
-
-    def rec(i: Int, sum: Double): Individual = {
-      if (i >= individuals.length) individuals(individuals.length - 1)
-      else if (p <= sum + populationFitness(i)) individuals(i)
-      else rec(i + 1, sum + populationFitness(i))
-    }
-
-    rec(0, 0.0)
-  }
+  override def randomIndividual: StringIndividual =
+    StringIndividual((0 until target.length).map(_ => randomLetterOrSpace).mkString)
 
   def randomLetterOrSpace: Char = {
     val low = 'a'.toInt
@@ -47,36 +37,23 @@ class Population(populationSize: Int, crossoverRate: Float, mutationRate: Float,
 
   def mutate(c: Char): Char = if (Random.nextFloat < mutationRate) randomLetterOrSpace else c
 
-  def reproduce(individual1: Individual, individual2: Individual): Array[Individual] = {
+  override def reproduce(individual1: StringIndividual, individual2: StringIndividual): Array[StringIndividual] = {
     val crossoverPoint = if (Random.nextFloat < crossoverRate) Random.nextInt(target.length) else target.length
     val s1 = individual1.s.take(crossoverPoint) + individual2.s.drop(crossoverPoint)
     val s2 = individual2.s.take(crossoverPoint) + individual1.s.drop(crossoverPoint)
 
     Array(
-      Individual(s1.map(mutate)),
-      Individual(s2.map(mutate))
+      StringIndividual(s1.map(mutate)),
+      StringIndividual(s2.map(mutate))
     )
   }
-
-  def reproduceTwo(populationFitness: Array[Double]): Array[Individual] = {
-    val individual1 = selectOne(populationFitness)
-    val individual2 = selectOne(populationFitness)
-    reproduce(individual1, individual2)
-  }
-
-  def next(): Unit = {
-    individuals = Array.fill(individuals.length / 2)(reproduceTwo(fitness)).flatten
-  }
-
-  def population: List[Individual] = individuals.toList
 }
 
-
-object Population {
-
-  def apply(populationSize: Int, crossoverRate: Float, mutationRate: Float, target: String): Population =
-    new Population(populationSize, crossoverRate, mutationRate, target)
+object StringPopulation {
+  def apply(populationSize: Int, crossoverRate: Float, mutationRate: Float, target: String) =
+    new StringPopulation(populationSize, crossoverRate, mutationRate, target)
 }
+
 
 case class GAStringConfig(target: String, mutationRate: Float, crossoverRate: Float, populationSize: Int, showTop: Int)
 
@@ -94,7 +71,7 @@ class GAString extends PApplet {
 
   val config = GAStringConfigs.corgis
 
-  val population = Population(config.populationSize, config.crossoverRate, config.mutationRate, config.target)
+  val population = StringPopulation(config.populationSize, config.crossoverRate, config.mutationRate, config.target)
 
   override def settings(): Unit = {
     size(600, 600, PConstants.P2D)
@@ -110,9 +87,9 @@ class GAString extends PApplet {
     population.next()
     if (frameCount % 5 == 0) {
       background(255)
-      val top = population.population.sortBy(_.fitness(config.target)).reverse.take(config.showTop)
+      val top = population.population.sortBy(i => population.individualFitness(i)).reverse.take(config.showTop)
       top.zipWithIndex.foreach { case (ind, i) =>
-        text(f"${i + 1}. '${ind.s}', Fitness:  ${ind.fitness(config.target)}%1.3f", 50, 50 + 100 * i)
+        text(f"${i + 1}. '${ind.s}', Fitness:  ${population.individualFitness(ind)}%1.3f", 50, 50 + 100 * i)
       }
       if (top.head.s == config.target) noLoop()
     }
