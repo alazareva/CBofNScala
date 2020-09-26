@@ -127,9 +127,11 @@ class Hopfield extends PApplet {
   }
 
   override def draw(): Unit = {
-    showNetwork()
-    update()
-    println(cost)
+    if (frameCount % 5 == 0) {
+      showNetwork()
+      update()
+      println(cost)
+    }
   }
 }
 
