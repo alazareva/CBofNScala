@@ -7,6 +7,7 @@ included in this repository.
 #### L-Systems
 Model growth using a series of simple production rules that though iteration
 can crate complex systems resembling structures often found in nature.
+[L-Systems](https://github.com/alazareva/CBofNScala/blob/master/examples/lsystems.png)
 
 #### Affine Transformation Fractals
 Similar to L-Systems, Affine transformation iteratively apply a set of rules
