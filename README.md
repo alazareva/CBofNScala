@@ -48,3 +48,4 @@ Applies the concepts of evolution, reproduction, and mutation to evolve
 agents that are highly fit to solve specific problems.
 
 ### Installation Tips 
+In order to run the code you'll need to add Processing's core.jar library to your classpath.
