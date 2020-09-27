@@ -5,7 +5,7 @@ were reimplemented using Scala and Processing. The following applications are
 included in this repository.
 
 #### L-Systems
-Model growth using a series of simple production rules that though iteration
+Model growth using a series of simple production rules that, though iteration,
 can crate complex systems resembling structures often found in nature. Example: a 
 tree-like structure emerging after several iterations.
 
@@ -34,10 +34,10 @@ Animated Lorenz attractor shows the trajectory of a point governed by a
 series of 3 differential equations.
 
 #### Producer-Consumer Dynamics
-Models the population dynamics of predator-pray systems.
+Models the population dynamics of predator-prey systems.
 
 #### Cellular Automata
-Explores the evolution of system where the state of each cell is dependant 
+Explores the evolution of system in which the state of each cell is dependant 
 on the states of its neighbors. Example: Hodgepodge Machine.
 
 ![Hodgepodge](https://github.com/alazareva/CBofNScala/blob/master/examples/hpm.png)
