@@ -44,7 +44,10 @@ on the states of its neighbors. Example: Hodgepodge Machine.
 
 #### Autonomous Agents
 Shows how collections of organism can self-organize by each individual 
-following a set simple heuristics.
+following a set simple heuristics. Example: Boids going from random to flocking
+behavior.
+
+![Boids](https://github.com/alazareva/CBofNScala/blob/master/examples/boids.png)
 
 #### Competition and Cooperation
 Illustration of the principles of game theory.
