@@ -4,7 +4,7 @@ import processing.core.{PApplet, PConstants}
 
 import scala.util.Random
 
-case class Cell(state: Int, sum: Int = 0, newSum: Int = 0)
+case class GameOfLifeCell(state: Int, sum: Int = 0, newSum: Int = 0)
 
 
 class GameOfLife extends PApplet {
@@ -18,8 +18,8 @@ class GameOfLife extends PApplet {
   val rh = Math.max(h + extra * 2, high)
   val prodOfInitialAlive = 0.15f
 
-  def randomCell: Cell =  if (Random.nextFloat() < prodOfInitialAlive) Cell(1) else Cell(0)
-  val cells: Array[Array[Cell]] = Array.fill(rh, rw)(randomCell)
+  def randomCell: GameOfLifeCell =  if (Random.nextFloat() < prodOfInitialAlive) GameOfLifeCell(1) else GameOfLifeCell(0)
+  val cells: Array[Array[GameOfLifeCell]] = Array.fill(rh, rw)(randomCell)
 
   override def settings(): Unit = {
     size(rw, rh, PConstants.P2D)

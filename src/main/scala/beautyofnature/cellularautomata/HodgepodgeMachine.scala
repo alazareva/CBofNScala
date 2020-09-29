@@ -64,7 +64,7 @@ class HodgepodgeMachine extends PApplet {
       cells(j)(i) = cell.copy(oldState = cell.newState, newState = cell.oldState)
     }
   }
-  
+
   override def draw(): Unit = {
     for {
       i <- 0 until width
