@@ -1,6 +1,6 @@
 package beautyofnature.classifierSystems
 
-import processing.core.PApplet
+import processing.core.{PApplet, PConstants}
 
 import scala.util.Random
 
@@ -19,6 +19,8 @@ class ZerothLevelClassifier extends PApplet {
   val worldW = 100
   val worldH = 100
 
+  val scale = 5
+
   val CLEN = 16
   val ALEN = 3
   val size = 400
@@ -34,6 +36,7 @@ class ZerothLevelClassifier extends PApplet {
   val discountRate = 0.71f
   val foodReward = 1000
 
+  var oldActionList = List.empty[Classifier]
 
   val classifiers: Array[Classifier] = Array.fill(size)(Classifier(initialStrength, randomCondition, randomAction))
   val world: Array[Array[WorldCell]] = ???
@@ -42,6 +45,10 @@ class ZerothLevelClassifier extends PApplet {
 
   val order = List((0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1))
 
+
+  override def settings(): Unit = {
+    size(worldW * scale, worldH * scale, PConstants.P2D)
+  }
 
   def placeAgent(): Unit = {
     val indexes = for {
@@ -82,7 +89,7 @@ class ZerothLevelClassifier extends PApplet {
 
   def randomAction: String = (0 until ALEN).map(_ => (Random.nextInt % 2).toChar).mkString
 
-  def getAgentPositionString: String = {
+  def environment: String = {
     val (agentX, agentY) = agentPosition
     order.map { case (xOff, yOff) =>
         val x = (agentX + xOff + worldW) % worldW
@@ -133,6 +140,10 @@ class ZerothLevelClassifier extends PApplet {
       classifiers(replace) = newClassifier
       newClassifier :: matches
     }
+  }
+
+  def matchList(env: String): List[Classifier] = {
+    classifiers.filter(c => compareStrings(c.condition, env)).toList
   }
 
   def getActions(matches: List[Classifier]): List[Classifier] = {
@@ -200,9 +211,36 @@ class ZerothLevelClassifier extends PApplet {
     // TODO the rest
   }
 
-  override def draw(): Unit = {
-
+  def drawWorld(): Unit = {
+    for {
+      h <- 0 until  worldH
+      w <- 0 until worldW
+    } {
+      val c = world(h)(w) match {
+        case Empty => color(255, 255, 255)
+        case Agent => color(255, 0, 0)
+        case Food => color(0, 255, 0)
+        case Rock => 0
+      }
+      fill(c)
+      circle(w * scale, h * scale, scale)
+    }
   }
 
+  def updateWorld(): Unit = {
+    val env = environment
+    val mlist = covering(matchList(env), env)
+    val alist = getActions(mlist)
+    val reward = move(alist.head.action)
+    update(reward, mlist, alist, oldActionList)
+    if (Random.nextFloat < gaInvocationRate) geneticAlgorithm()
+    oldActionList = alist
+    //TODO restart?
+  }
+
+  override def draw(): Unit = {
+    drawWorld()
+    updateWorld()
+  }
 
 }
