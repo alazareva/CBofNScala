@@ -4,6 +4,8 @@ import processing.core.{PApplet, PConstants}
 
 import scala.util.Random
 
+case class Cell(state: Int, sum: Int = 0, newSum: Int = 0)
+
 
 class GameOfLife extends PApplet {
 
@@ -16,13 +18,34 @@ class GameOfLife extends PApplet {
   val rh = Math.max(h + extra * 2, high)
   val prodOfInitialAlive = 0.15f
 
-
-  var sum = Array.fill(rh, rw)(0)
-  val state = Array.fill(rh, rw)(0)
-  var newSum = Array.fill(rh, rw)(0)
+  def randomCell: Cell =  if (Random.nextFloat() < prodOfInitialAlive) Cell(1) else Cell(0)
+  val cells: Array[Array[Cell]] = Array.fill(rh, rw)(randomCell)
 
   override def settings(): Unit = {
     size(rw, rh, PConstants.P2D)
+  }
+
+  def updateSum(rw: Int, rh: Int, ii: Int, jj: Int, change: Int): Unit = {
+    for {
+      k <- -1 to 1
+      l <- -1 to 1
+      if k != 0 || l !=0
+    } {
+      val j = (k + jj + rh) % rh
+      val i = (l + ii + rw) % rw
+      val cell = cells(j)(i)
+      cells(j)(i) = cell.copy(newSum = cell.newSum + change)
+    }
+  }
+
+  def copySum(): Unit = {
+    for {
+      i <- 0 until rw
+      j <- 0 until rh
+    } {
+      val cell = cells(j)(i)
+      cells(j)(i) = cell.copy(sum = cell.newSum)
+    }
   }
 
   override def setup(): Unit = {
@@ -32,57 +55,30 @@ class GameOfLife extends PApplet {
       i <- 0 until rw
       j <- 0 until rh
     } {
-      val data = if (Random.nextFloat() < prodOfInitialAlive) 1 else 0
-      state(j)(i) = data
-      if (data == 1) {
-        updateCount(sum, rw, rh, i, j, 1)
-      }
-      val c = if (data == 1) color(0) else color(255)
-      stroke(c)
-      point(i, j)
+      if (cells(j)(i).state == 1) updateSum(rw, rh, i, j, 1)
     }
-  }
-
-
-  def updateCount(arr: Array[Array[Int]], rw: Int, rh: Int, ii: Int, jj: Int, change: Int): Unit = {
-    for {
-      i <- -1 to 1
-      j <- -1 to 1
-      if i != 0 || j !=0
-    } {
-      arr((j + jj + rh) % rh)((i + ii + rw) % rw) += change
-    }
-  }
-
-  def copyOver(): Unit = {
-    for {
-      i <- 0 until rw
-      j <- 0 until rh
-    } newSum(j)(i) = sum(j)(i)
   }
 
   override def draw(): Unit = {
     background(255)
-    copyOver()
+    copySum()
     for {
       i <- 0 until rw
       j <- 0 until rh
     } {
-      if (state(j)(i) == 0 && sum(j)(i) == 3) {
-        updateCount(newSum, rw, rh, i, j, 1)
-        state(j)(i) = 1
+      val cell = cells(j)(i)
+      if (cell.state == 0 && cell.sum == 3) {
+        updateSum(rw, rh, i, j, 1)
+        cells(j)(i) = cell.copy(state = 1)
         stroke(0)
         point(i, j)
-      } else if (state(j)(i) == 1 && (sum(j)(i) < 2 || sum(j)(i) > 3)) {
-        updateCount(newSum, rw, rh, i, j, -1)
-        state(j)(i) = 0
+      } else if (cell.state == 1 && (cell.sum < 2 || cell.sum >  3)) {
+        updateSum(rw, rh, i, j, -1)
+        cells(j)(i) = cell.copy(state = 0)
         stroke(255)
         point(i, j)
       }
     }
-    val swap = sum
-    sum = newSum
-    newSum = swap
   }
 }
 
