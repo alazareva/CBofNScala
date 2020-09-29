@@ -4,6 +4,8 @@ import processing.core.{PApplet, PConstants}
 
 import scala.util.Random
 
+case class Cell(oldState: Int, newState: Int = 0)
+
 class HodgepodgeMachine extends PApplet {
 
   val frequency = 1
@@ -12,8 +14,7 @@ class HodgepodgeMachine extends PApplet {
   val w = 500
   val h = 500
 
-  var oldState = Array.fill(h, w)(Random.nextInt(states))
-  var newState = Array.fill(h, w)(0)
+  val cells: Array[Array[Cell]] = Array.fill(h, w)(Cell(Random.nextInt(states)))
 
   val k1 = 2
   val k2 = 3
@@ -24,10 +25,11 @@ class HodgepodgeMachine extends PApplet {
     size(w, h, PConstants.P2D)
   }
 
-  def updateCell(i: Int, j: Int) = {
-    var sum = oldState(j)(i)
-    var numinf = 0
-    var numill = 0
+  def updateCell(i: Int, j: Int): Unit = {
+    val cell = cells(j)(i)
+    var sum = cell.oldState
+    var numInf = 0
+    var numIll = 0
     for {
       x <- -1 to 1
       y <- -1 to 1
@@ -36,18 +38,33 @@ class HodgepodgeMachine extends PApplet {
       val nx = x + i
       val ny = y + j
       if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-        sum += oldState(ny)(nx)
-        if (oldState(ny)(nx) == states - 1) numill += 1
-        else if (oldState(ny)(nx) > 0) numinf += 1
+        sum += cells(ny)(nx).oldState
+        if (cells(ny)(nx).oldState == states - 1) numIll += 1
+        else if (cells(ny)(nx).oldState > 0) numInf += 1
       }
     }
-    if (oldState(j)(i) == 0) newState(j)(i) = (Math.floor(numinf / k1) + Math.floor(numill / k2)).toInt
-    else if (oldState(j)(i) < states - 1) newState(j)(i) = Math.floor(sum / (numinf + 1)).toInt + gg
-    else newState(j)(i) = 0
 
-    if (newState(j)(i) > states - 1) newState(j)(i) = states - 1
+    val newState = {
+      val candidate = {
+        if (cell.oldState == 0) Math.floor(numInf / k1) + Math.floor(numIll / k2)
+        else if (cell.oldState < states - 1) Math.floor(sum / (numInf + 1)).toInt + gg
+        else 0
+      }
+      if (candidate > states - 1) states - 1 else candidate.toInt
+    }
+    cells(j)(i) = cell.copy(newState = newState)
   }
 
+  def swapOldAndNew(): Unit = {
+    for {
+      i <- 0 until width
+      j <- 0 until height
+    } {
+    val cell = cells(j)(i)
+      cells(j)(i) = cell.copy(oldState = cell.newState, newState = cell.oldState)
+    }
+  }
+  
   override def draw(): Unit = {
     for {
       i <- 0 until width
@@ -55,13 +72,11 @@ class HodgepodgeMachine extends PApplet {
     } {
       updateCell(i, j)
       if (frameCount % frequency == 0) {
-        stroke(PApplet.map(oldState(j)(i), 0, states, 0, 255))
+        stroke(PApplet.map(cells(j)(i).oldState, 0, states, 0, 255))
         point(i, j)
       }
     }
-    val swap = oldState
-    oldState = newState
-    newState = swap
+    swapOldAndNew()
   }
 }
 
