@@ -72,7 +72,7 @@ environment filled with rocks (black) and food (green).
 ![CS](https://github.com/alazareva/CBofNScala/blob/master/examples/zlc.png)
 
 #### Neural Networks
-Implementation of a simple 2 layer MultiLevel Perceptron to solve the classic XOR problem.
+Implementation of a simple 2 layer Multilayer Perceptron to solve the classic XOR problem.
 
 ![CS](https://github.com/alazareva/CBofNScala/blob/master/examples/mlp.png)
 
