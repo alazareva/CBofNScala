@@ -80,20 +80,19 @@ class NN(
       b.g(i) = gy(i)
     }
 
+    val gz = Array.fill(z.length)(0.0)
     z.indices.foreach { i =>
-      val gz = Array.fill(z.length)(0.0)
       gy.indices.foreach { j =>
         // dE/dv[i,j] = dE/dy[j] * z[i]
         V.g(j)(i) = gy(j) * z(i)
         // dE/dz[i] = sum_j ( dE/dy_in[j] * v[j][i] )
-        gz(i) =  gz(i) + gy(j) * V.w(j)(i)
+        gz(i) = gz(i) + (gy(j) * V.w(j)(i))
       }
       // dE/dz_in[i] = dE/dz[i] * z[i] * (1 - z[i])
       // dE/da[i] = dz_in[i]
-      gz.indices.foreach { i =>
-        gz(i) = gz(i) * (z(i) * (1 - z(i)))
-        a.g(i) = gz(i)
-      }
+
+      gz(i) = gz(i) * (z(i) * (1 - z(i)))
+      a.g(i) = gz(i)
 
       // dE/du[i][j] = dz_in[i] * x[j]
       x.indices.foreach { j =>
@@ -129,10 +128,11 @@ class NN(
     updateWeights(V)
   }
 
-  def trainingStep(x: List[Double], target: List[Double]): Unit = {
-    val (_, z, y) = feedforward(x, target)
+  def trainingStep(x: List[Double], target: List[Double]): Double = {
+    val (e, z, y) = feedforward(x, target)
     feedback(x, target, y, z)
     update()
+    e
   }
 }
 
@@ -179,10 +179,7 @@ object NNConfigs {
 }
 
 object XOR {
-  """0	0	0
-    |0	1	1
-    |1	0	1
-    |1	1	0"""
+
   val x: List[List[Double]] = List(
     List(0, 0),
     List(0, 1),
@@ -193,7 +190,7 @@ object XOR {
     List(0),
     List(1),
     List(1),
-    List(2)
+    List(0)
   )
 }
 
@@ -206,9 +203,12 @@ class MLP extends PApplet {
   val topPadding = 100
   val horizontalSpacing = 200
   val verticalSpacing = 200
+  val showEvery = 100
+  val trainingSteps = 1000
+  var converged = false
 
   override def settings(): Unit = {
-    size(800, 600, PConstants.P2D)
+    size(650, 400, PConstants.P2D)
   }
 
   override def setup(): Unit = {
@@ -234,7 +234,7 @@ class MLP extends PApplet {
       circle(x1 + textOffset * 1.5f, y1 + offsetY, 50)
       fill(0)
       textSize(14)
-      text(f"${network.U.w(j)(i)}%1.2f", leftPadding + textOffset, topPadding + verticalSpacing * i + offsetY)
+      text(f"${network.U.w(j)(i)}%1.2f", x1 + textOffset, y1 + offsetY)
     }
     popStyle()
   }
@@ -245,6 +245,7 @@ class MLP extends PApplet {
       val y1 = topPadding + verticalSpacing * i
       val x2 = leftPadding + 2 * horizontalSpacing
       val y2 = topPadding + 0.5f * verticalSpacing
+      stroke(0)
       line(x1, y1, x2, y2)
       val textOffset = 45
       val offsetY = if (y1 == y2) 0 else (y2 - y1) / (x2 - x1) * textOffset
@@ -253,21 +254,58 @@ class MLP extends PApplet {
       circle(x1 + textOffset * 1.5f, y1 + offsetY, 50)
       fill(0)
       textSize(14)
-      text(f"${network.V.w(0)(i)}%1.2f", leftPadding + textOffset, topPadding + verticalSpacing * i + offsetY)
+      text(f"${network.V.w(0)(i)}%1.2f", x1 + textOffset, y1 + offsetY)
     }}
   }
 
   def drawNetwork(): Unit = {
+    pushStyle()
+    fill(255)
+    stroke(0)
     drawU()
     drawV()
     (0 until config.numInputs).foreach(i => circle(leftPadding, topPadding + verticalSpacing * i, 10))
-    (0 until config.numHidden).foreach(i => circle(leftPadding + horizontalSpacing, topPadding + verticalSpacing * i, 10))
+    (0 until config.numHidden).foreach { i =>
+      fill(255)
+      stroke(0)
+      circle(leftPadding + horizontalSpacing, topPadding + verticalSpacing * i, 50)
+      fill(0)
+      text(f"${network.a.w(i)}%1.2f", leftPadding + horizontalSpacing - 17, topPadding + verticalSpacing * i)
+    }
     circle(leftPadding + 2 * horizontalSpacing, topPadding + 0.5f * verticalSpacing, 10)
+    popStyle()
+  }
+
+  def showXY(x: List[Double], y: Array[Double]): Unit = {
+    pushStyle()
+    fill(255, 0, 0)
+    x.indices.foreach{i =>
+      textSize(25)
+      text(f"${x(i)}%1.0f", leftPadding - 50, topPadding + verticalSpacing * i)
+    }
+    text(f"${y(0)}%1.2f", leftPadding + 2 * horizontalSpacing + 50, topPadding + 0.5f * verticalSpacing)
+    popStyle()
   }
 
   override def draw(): Unit = {
-    background(255)
-    drawNetwork()
+    var epohError = 0.0
+    (0 until trainingSteps).foreach { _ =>
+      val randomIndex = Random.nextInt(XOR.x.length)
+      val error = network.trainingStep(XOR.x(randomIndex), XOR.target(randomIndex))
+      epohError += error
+    }
+    if (frameCount % showEvery == 0) {
+      background(255)
+      drawNetwork()
+      fill(0)
+      text(f"Training Steps: ${frameCount * trainingSteps}", 50, 50)
+      text(f"Average Error: ${epohError / trainingSteps}%1.5f", 250, 50)
+      fill(255, 0, 0)
+      val randomIndex = Random.nextInt(XOR.x.length)
+      val error = network.trainingStep(XOR.x(randomIndex), XOR.target(randomIndex))
+      text(f"Error: $error%1.5f", 450, 50)
+      showXY(XOR.x(randomIndex), network.feedforward(XOR.x(randomIndex), XOR.target(randomIndex))._3)
+    }
   }
 }
 
@@ -277,4 +315,3 @@ object MLP extends PApplet {
     PApplet.main("beautyofnature.neuralnetworks.MLP")
   }
 }
-
