@@ -62,5 +62,19 @@ if a random string into a fun fact about Corgis.
 
 ![GA](https://github.com/alazareva/CBofNScala/blob/master/examples/ga.png)
 
+#### Classifier Systems
+An early version of Reinforcement Learning. An agent makes a decision based on 
+the recommendation of one of multiple classifiers. Classifiers that produce 
+high-reward decisions are given more voting power. New classifiers can also be 
+generated using a generic algorithm. Example: An agent (red) looking for food in an 
+environment filled with rocks (black) and food (green).
+
+![CS](https://github.com/alazareva/CBofNScala/blob/master/examples/zlc.png)
+
+#### Neural Networks
+Implementation of a simple 2 layer MultiLevel Perceptron to solve the classic XOR problem.
+
+![CS](https://github.com/alazareva/CBofNScala/blob/master/examples/mlp.png)
+
 ### Installation Tips 
 In order to run the code you'll need to add Processing's core.jar library to your classpath.
