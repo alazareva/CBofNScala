@@ -1,7 +1,7 @@
 ## Examples from The Computational Beauty of Nature (Scala/Processing)
 
 These examples from Gary William Flake's 'Computational Beauty of Nature' book 
-were reimplemented using Scala and Processing. The following applications are 
+were reimplemented using Scala and Processing. Original C code can be found [here](https://github.com/gwf/CBofN). The following applications are 
 included in this repository.
 
 #### L-Systems
